@@ -1,0 +1,12 @@
+{
+  "name": "parallax",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A six-chamber perspective puzzle game with an original ambient soundtrack.",
+  "engines": { "node": ">=22.9" },
+  "scripts": {
+    "start": "node preview.mjs",
+    "check": "node --check dist/game.js && node --check dist/audio.js && node --check dist/levels.js && node --check preview.mjs"
+  }
+}
