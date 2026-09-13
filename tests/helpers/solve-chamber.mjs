@@ -1,4 +1,4 @@
-import {parseLevel,isSolid} from '../../dist/levels.js';
+import {parseLevel,isSolid} from '../../dist/client/levels.js';
 
 export function solveChamber(level) {
   const tiles=parseLevel(level),start=tiles.find(t=>t.type==='S');
