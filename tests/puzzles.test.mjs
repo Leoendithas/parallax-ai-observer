@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {LEVELS} from '../dist/levels.js';
+import {LEVELS} from '../dist/client/levels.js';
 import {solveChamber} from './helpers/solve-chamber.mjs';
 
 test('public campaign contains only the six released chambers',()=>{
