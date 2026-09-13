@@ -1,14 +1,24 @@
 # Parallax — The Observer’s Path
 
-A complete browser puzzle game in six chambers. Switching between a rotatable isometric 3D overview and first person changes the physical world. Amber bridges are solid only in the overview; blue bridges are solid only in first person. White stone persists in both.
+A browser puzzle game with six original chambers and three playable prototypes for its next chapters. Switching between a rotatable isometric 3D overview and first person changes the physical world. Amber bridges are solid only in the overview; blue bridges are solid only in first person. White stone persists in both.
 
 [Play the public game](https://parallax-observers-path.lancetyw.chatgpt.site/)
 
-This edition runs entirely in the browser, with fixed authored chambers and no AI Observer or API key requirement.
+This edition runs entirely in the browser, with authored chambers and no AI Observer or API key requirement.
 
 ## Run locally
 
-With Node.js 22.9 or newer, run `npm start` and open http://127.0.0.1:5174. Set `PORT` to choose a different port. No dependency installation or compilation is needed. Run `npm run check` to check the JavaScript syntax.
+With Node.js 22.9 or newer, run `npm start` and open http://127.0.0.1:5174. Set `PORT` to choose a different port. No dependency installation or compilation is needed. Run `npm run check` for JavaScript syntax checks and `npm test` for puzzle-state and seal-geometry verification.
+
+## New chapter prototypes
+
+Only three sample levels are implemented for feedback; the intervening campaign levels have not been built.
+
+- [Chamber 7 — Sightline seals](https://parallax-observers-path.lancetyw.chatgpt.site/#chamber-7): find the marked white viewpoint, enter first person, center the split ring, then press **F** or **Bind seal**. Its blue bridge stays open.
+- [Chamber 13 — Rotating islands](https://parallax-observers-path.lancetyw.chatgpt.site/#chamber-13): stand on the white circular hub in overview and press **F** or **Turn island**. The amber arm turns clockwise; white platforms stay fixed.
+- [Chamber 19 — Combined mechanics](https://parallax-observers-path.lancetyw.chatgpt.site/#chamber-19): use both mechanics to reach the fragments and exit.
+
+The **07 Seals**, **13 Islands**, and **19 Combined** buttons jump directly to each prototype. The journey selector also includes the six original chambers. **I/J/K/L** gently adjust first-person aim; drag/swipe and the on-screen Look arrows work too. **R** restarts the current chamber, resetting its seal and island.
 
 ## Play
 
@@ -32,4 +42,4 @@ The sample provided by the user informed the camera/world relationship; the cham
 
 ## Agent interaction
 
-When `document.modelContext` is available, the game exposes read_game_state, read_audio_state, start_chamber, shift_perspective, move_to_tile, and walk_one_step. These use the same rules and state as the visible interface.
+When `document.modelContext` is available, the game exposes read_game_state, read_audio_state, start_chamber, shift_perspective, move_to_tile, walk_one_step, look_direction, and use_chamber_mechanism. These use the same rules and state as the visible interface.

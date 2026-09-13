@@ -6,6 +6,37 @@ export const LEVELS = [
  {name:'A circle, <br>broken.',menu:'A circle, broken',description:'What falls out of sight <br>can still be part of the way.',map:['.........','.OAAOBBO.','.B.....A.','.O..E..O.','.A..B..B.','.SBBOAAO.','.........'],shards:[{x:3,z:1,mode:0},{x:7,z:4,mode:1},{x:3,z:5,mode:1}],hint:'Travel around the outer ring, switching at white stone. The final blue path to the arch begins at the lower middle anchor.'},
  {name:'All things <br>converge.',menu:'All things converge',description:'The world was never <br>only one thing.',map:['.........','.OBBEAAO.','.A..A..B.','.OAASBBO.','.B..B..A.','.OBBOAAO.','.........'],shards:[{x:1,z:5,mode:0},{x:7,z:1,mode:1},{x:5,z:5,mode:0}],hint:'One amber fragment rests on white stone reached by a blue path. Shift there to collect it, then shift again to leave.'}
 ];
+LEVELS.forEach((level,index)=>{level.id=index+1;});
+
+// These are samples of the proposed chapters, not placeholders for unbuilt rooms.
+export const PROTOTYPE_IDS = [7,13,19];
+LEVELS.push(
+ {
+  id:7,prototype:true,chapter:'Sightline seals',name:'A line<br>of sight.',menu:'A line of sight',
+  description:'Two pieces of a circle.<br>One place to see them whole.',
+  map:['.........','....OBE..','....B....','....B....','....B....','.SAAO....','.........'],
+  shards:[{x:5,z:1,mode:1}],
+  seals:[{id:'dawn',name:'Dawn seal',anchor:{x:4,z:5},yaw:0,gates:[{x:4,z:2}]}],
+  hint:'Walk the amber path to the white stone marked with a circle. Enter first person. Look north and slightly up until the two arcs form a ring at the center of your view, then bind the seal. The blue path will stay open.'
+ },
+ {
+  id:13,prototype:true,chapter:'Rotating islands',name:'A world<br>that turns.',menu:'A world that turns',
+  description:'Reach the heart of the island.<br>Turn a new way into reach.',
+  map:['.........','....OBE..','.........','.........','.SAAO....','.........','.........'],
+  shards:[{x:5,z:1,mode:1}],
+  islands:[{id:'turntable',name:'West island',pivot:{x:4,z:4},arm:[{x:2,z:4},{x:3,z:4}]}],
+  hint:'Walk to the white circular hub. In overview, turn the island once clockwise to point its amber arm north. Walk to the far white landing, then enter first person and follow blue to the fragment and arch.'
+ },
+ {
+  id:19,prototype:true,chapter:'Combined mastery',name:'The shape<br>of an answer.',menu:'The shape of an answer',
+  description:'Find the viewpoint.<br>Then make the way home.',
+  map:['.........','....OBO..','.........','.........','.SAAO..O.','.......B.','.......B.','.......E.','.........'],
+  shards:[{x:6,z:1,mode:1},{x:7,z:6,mode:1}],
+  islands:[{id:'turntable',name:'Crossroads island',pivot:{x:4,z:4},arm:[{x:2,z:4},{x:3,z:4}]}],
+  seals:[{id:'return',name:'Return seal',anchor:{x:6,z:1},yaw:Math.PI,gates:[{x:7,z:5}]}],
+  hint:'Turn north from the hub. At the north landing, enter first person and cross to the circle-marked balcony. Face south and bind the seal. Return to the hub in overview, turn the arm east, then use the opened blue path to reach the final fragment and arch.'
+ }
+);
 export function parseLevel(level){const tiles=[];level.map.forEach((row,z)=>[...row].forEach((type,x)=>{if(type!=='.')tiles.push({x,z,type,mask:type==='A'?1:type==='B'?2:3});}));return tiles;}
 export function isSolid(tile,mode){return !!tile && !!(tile.mask & (1<<mode));}
 export function findPath(tiles,start,target,mode){const queue=[[start]],seen=new Set([`${start.x},${start.z}`]);while(queue.length){const path=queue.shift(),p=path.at(-1);if(p.x===target.x&&p.z===target.z)return path.slice(1);for(const [dx,dz]of [[1,0],[-1,0],[0,1],[0,-1]]){const t=tiles.find(t=>t.x===p.x+dx&&t.z===p.z+dz),k=t&&`${t.x},${t.z}`;if(isSolid(t,mode)&&!seen.has(k)){seen.add(k);queue.push([...path,t]);}}}return null;}
