@@ -1,0 +1,14 @@
+{
+  "name": "parallax-ai-observer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A perspective puzzle game with automatic Agents API difficulty adaptation.",
+  "engines": {
+    "node": ">=22.9"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env.local preview.mjs",
+    "check": "node --check dist/client/game.js && node --check dist/client/observer.js && node --check dist/server/index.js"
+  }
+}
