@@ -1,4 +1,6 @@
-import {LEVELS,parseLevel,isSolid} from '../dist/client/levels.js';
+import {LEVELS,isSolid} from '../dist/client/levels.js';
+import {createPuzzle,turnIsland} from '../dist/client/puzzles.js';
+// Keep original chamber records: adding islands does not change chambers 1–6.
 export const VERSION='six-chambers-v1';
 export function validateName(value){
  if(typeof value!=='string')throw new Error('Enter a nickname.');
@@ -9,7 +11,7 @@ export function validateName(value){
 export function validateReplay(chamber,events,elapsed){
  const level=LEVELS.find(l=>l.id===chamber);
  if(!level||!Array.isArray(events)||!events.length||events.length>3000)throw new Error('This attempt could not be verified.');
- const tiles=parseLevel(level),at=(x,z)=>tiles.find(t=>t.x===x&&t.z===z),start=tiles.find(t=>t.type==='S');
+ const puzzle=createPuzzle(level),tiles=puzzle.tiles,at=(x,z)=>tiles.find(t=>t.x===x&&t.z===z),start=tiles.find(t=>t.type==='S');
  let pos=start,checkpoint=start,mode=0,falls=0,minimum=0,solved=false;const found=new Set();
  for(const e of events){
   let landed=true;
@@ -19,6 +21,9 @@ export function validateReplay(chamber,events,elapsed){
    if(!isSolid(tile,mode)){pos=checkpoint;falls++;landed=false;}else{pos=tile;if(tile.mask===3)checkpoint=tile;}
   }else if(e[0]==='s'&&e.length===2&&(e[1]===0||e[1]===1)&&e[1]!==mode){
    mode=e[1];minimum+=50;if(!isSolid(pos,mode)){pos=checkpoint;falls++;landed=false;}
+  }else if(e[0]==='t'&&e.length===2&&typeof e[1]==='string'&&turnIsland(puzzle,e[1],pos,mode).ok){
+   // Reduced motion turns instantly; only walks and shifts add a timing minimum.
+   landed=false;
   }else throw new Error('Invalid movement in this attempt.');
   if(landed)level.shards.forEach((s,i)=>{if(s.x===pos.x&&s.z===pos.z&&(s.mode===undefined||s.mode===mode))found.add(i);});
   solved=pos.type==='E'&&found.size===level.shards.length;

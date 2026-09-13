@@ -1,5 +1,7 @@
 import {database} from './database.js';
 import {VERSION,validateName,validateReplay} from './validation.js';
+import {LEVELS} from '../dist/client/levels.js';
+const chamberIds=new Set(LEVELS.map(level=>level.id));
 const cors={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type','Access-Control-Max-Age':'86400'};
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{...cors,'Content-Type':'application/json','Cache-Control':'no-store'}});
 const hex=bytes=>Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
@@ -16,7 +18,7 @@ export default {async fetch(request,env){
  try{
   const db=database(env);
   if(url.pathname==='/api/leaderboard'&&request.method==='GET'){
-   const chamber=Number(url.searchParams.get('chamber'));if(!Number.isInteger(chamber)||chamber<1||chamber>6)return json({error:'Choose chamber 1–6.'},400);
+   const chamber=Number(url.searchParams.get('chamber'));if(!Number.isInteger(chamber)||!chamberIds.has(chamber))return json({error:'Choose an available chamber.'},400);
    const entries=await db.all(`SELECT name,elapsed_ms AS elapsedMs,falls FROM (
     SELECT name,elapsed_ms,falls,started_at,ROW_NUMBER() OVER(PARTITION BY player ORDER BY elapsed_ms,falls,started_at) AS best
     FROM runs WHERE version=? AND chamber=? AND elapsed_ms IS NOT NULL
@@ -25,7 +27,7 @@ export default {async fetch(request,env){
   }
   if(url.pathname==='/api/runs'&&request.method==='POST'){
    const data=await body(request),name=validateName(data.name),chamber=data.chamber;
-   if(!Number.isInteger(chamber)||chamber<1||chamber>6||!(/^[a-f0-9]{64}$/).test(data.player))return json({error:'Choose a valid chamber and player.'},400);
+   if(!Number.isInteger(chamber)||!chamberIds.has(chamber)||!(/^[a-f0-9]{64}$/).test(data.player))return json({error:'Choose a valid chamber and player.'},400);
    const now=Date.now(),ip=request.headers.get('cf-connecting-ip')||'local';
    const ipHash=hex(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(ip))));
    const count=await db.first('SELECT COUNT(*) AS count FROM runs WHERE ip_hash=? AND started_at>?',ipHash,now-3600000);

@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import {LEVELS} from '../dist/client/levels.js';
 import {solveChamber} from './helpers/solve-chamber.mjs';
 
-test('public campaign contains only the six released chambers',()=>{
-  assert.deepEqual(LEVELS.map(l=>l.id),[1,2,3,4,5,6]);
+test('public campaign contains the twelve released chambers',()=>{
+  assert.deepEqual(LEVELS.map(l=>l.id),[1,2,3,4,5,6,7,8,9,10,11,12]);
   for(const level of LEVELS){
     assert.ok(!level.prototype);
     assert.ok(level.map.every(row=>row.length===level.map[0].length));

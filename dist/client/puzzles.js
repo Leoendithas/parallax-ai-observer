@@ -2,15 +2,31 @@ import {parseLevel} from './levels.js';
 
 export const sameTile=(a,b)=>a.x===b.x&&a.z===b.z;
 export const armDirections=['west','north','east','south'];
+export function islandDirections(puzzle,island){
+ const directions=new Set();
+ for(const tile of puzzle.tiles.filter(t=>t.islandId===island.id)){
+  const dx=tile.x-island.pivot.x,dz=tile.z-island.pivot.z;
+  if(dx<0)directions.add('west');if(dz<0)directions.add('north');
+  if(dx>0)directions.add('east');if(dz>0)directions.add('south');
+ }
+ return armDirections.filter(direction=>directions.has(direction));
+}
 
 export function createPuzzle(level){
  const tiles=parseLevel(level);
  const islands=(level.islands||[]).map(config=>({...config,pivot:{...config.pivot},quarter:0,turns:0}));
  const seals=(level.seals||[]).map(config=>({...config,unlocked:false}));
+ if(!level.map.length||!level.map.every(row=>row.length===level.map[0].length))throw new Error('A chamber must have a rectangular map.');
+ if(new Set(islands.map(i=>i.id)).size!==islands.length)throw new Error('Island IDs must be unique within a chamber.');
  for(const island of islands){
+  const hub=tiles.find(t=>sameTile(t,island.pivot));
+  if(!hub||hub.mask!==3||island.arm.some(p=>sameTile(p,island.pivot)))throw new Error('An island needs a fixed white hub.');
+  if(!island.arm.length)throw new Error('An island needs an amber arm.');
   for(const point of island.arm){
    const tile=tiles.find(t=>sameTile(t,point));
    if(!tile||tile.type!=='A')throw new Error('A rotating arm must contain only amber tiles.');
+   if(tile.islandId)throw new Error('Rotating arms must not share tiles.');
+   if(level.shards.some(shard=>sameTile(shard,point)))throw new Error('Fragments need a fixed landing.');
    Object.assign(tile,{islandId:island.id,baseX:tile.x,baseZ:tile.z});
   }
  }
@@ -21,7 +37,7 @@ export function createPuzzle(level){
    Object.assign(tile,{gateId:seal.id,baseMask:tile.mask,mask:0});
   }
  }
- return {tiles,islands,seals};
+ return {tiles,islands,seals,width:level.map[0].length,height:level.map.length};
 }
 
 // Clockwise as seen from above: west -> north -> east -> south.
@@ -39,6 +55,7 @@ export function turnIsland(puzzle,id,position,mode,direction=1){
  const quarter=(island.quarter+direction+4)%4;
  const moving=puzzle.tiles.filter(t=>t.islandId===id);
  const targets=moving.map(t=>rotatedPoint({x:t.baseX,z:t.baseZ},island.pivot,quarter));
+ if(targets.some(p=>p.x<0||p.z<0||p.x>=puzzle.width||p.z>=puzzle.height))return {ok:false,reason:'That turn would leave the chamber.'};
  if(targets.some(p=>puzzle.tiles.some(t=>t.islandId!==id&&sameTile(t,p))))return {ok:false,reason:'That turn would meet another platform.'};
  const before=moving.map(t=>({tile:t,x:t.x,z:t.z}));
  moving.forEach((tile,i)=>Object.assign(tile,targets[i]));
