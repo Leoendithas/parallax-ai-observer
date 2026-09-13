@@ -11,12 +11,15 @@ function storage(entries={}){
 test('prototype completions follow their rooms when reordered and new rooms stay incomplete',()=>{
  const saved=storage({'parallax-finished':'[0,5,6,7,8]'});
  const migrated=loadProgress(saved,keys);
- assert.deepEqual(LEVELS.filter(l=>migrated.includes(l.progressKey)).map(l=>l.id),[1,6,7]);
+ assert.deepEqual(LEVELS.filter(l=>migrated.includes(l.progressKey)).map(l=>l.id),[1,6,7,13,19]);
  const newRoom=LEVELS.find(l=>l.id===8).progressKey;
  saveProgress(saved,[...migrated,newRoom,newRoom]);
  assert.deepEqual(loadProgress(saved,[...keys].reverse()),[...migrated,newRoom]);
  assert.equal(saved.getItem('parallax-finished'),'[0,5,6,7,8]');
  assert.equal(new Set(keys).size,LEVELS.length);
+ assert.equal(LEVELS.find(l=>l.id===13).progressKey,'seal-intro');
+ assert.equal(LEVELS.find(l=>l.id===19).progressKey,'combined-prototype');
+ assert.deepEqual(LEVELS.filter(l=>l.id>=13&&!migrated.includes(l.progressKey)).map(l=>l.id),[14,15,16,17,18,20]);
 });
 test('invalid, unknown and unavailable saves do not prevent play',()=>{
  for(const value of ['no json','null','{}','[null,-1,500,"7"]'])assert.deepEqual(loadProgress(storage({'parallax-finished':value}),keys),[]);

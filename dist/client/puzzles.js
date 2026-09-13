@@ -18,6 +18,7 @@ export function createPuzzle(level){
  const seals=(level.seals||[]).map(config=>({...config,unlocked:false}));
  if(!level.map.length||!level.map.every(row=>row.length===level.map[0].length))throw new Error('A chamber must have a rectangular map.');
  if(new Set(islands.map(i=>i.id)).size!==islands.length)throw new Error('Island IDs must be unique within a chamber.');
+ if(new Set(seals.map(s=>s.id)).size!==seals.length)throw new Error('Seal IDs must be unique within a chamber.');
  for(const island of islands){
   const hub=tiles.find(t=>sameTile(t,island.pivot));
   if(!hub||hub.mask!==3||island.arm.some(p=>sameTile(p,island.pivot)))throw new Error('An island needs a fixed white hub.');
@@ -31,9 +32,12 @@ export function createPuzzle(level){
   }
  }
  for(const seal of seals){
+  const anchor=tiles.find(t=>sameTile(t,seal.anchor));
+  if(!anchor||anchor.mask!==3||islands.some(island=>sameTile(island.pivot,seal.anchor))||!Number.isFinite(seal.yaw))throw new Error('A seal needs a fixed white anchor and a sightline.');
+  if(!seal.gates.length)throw new Error('A seal needs a blue bridge.');
   for(const point of seal.gates){
    const tile=tiles.find(t=>sameTile(t,point));
-   if(!tile||tile.type!=='B')throw new Error('A seal gate must be a blue tile.');
+   if(!tile||tile.type!=='B'||tile.gateId)throw new Error('A seal gate must be an unclaimed blue tile.');
    Object.assign(tile,{gateId:seal.id,baseMask:tile.mask,mask:0});
   }
  }

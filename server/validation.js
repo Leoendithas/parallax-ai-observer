@@ -1,6 +1,6 @@
 import {LEVELS,isSolid} from '../dist/client/levels.js';
-import {createPuzzle,turnIsland} from '../dist/client/puzzles.js';
-// Keep original chamber records: adding islands does not change chambers 1–6.
+import {createPuzzle,turnIsland,bindSeal} from '../dist/client/puzzles.js';
+// Keep existing chamber records when adding new chapters.
 export const VERSION='six-chambers-v1';
 export function validateName(value){
  if(typeof value!=='string')throw new Error('Enter a nickname.');
@@ -24,9 +24,11 @@ export function validateReplay(chamber,events,elapsed){
   }else if(e[0]==='t'&&e.length===2&&typeof e[1]==='string'&&turnIsland(puzzle,e[1],pos,mode).ok){
    // Reduced motion turns instantly; only walks and shifts add a timing minimum.
    landed=false;
+  }else if(e[0]==='b'&&e.length===4&&typeof e[1]==='string'&&Number.isFinite(e[2])&&Number.isFinite(e[3])&&e[3]>=-1.4&&e[3]<=.52&&bindSeal(puzzle,e[1],pos,mode,e[2],e[3])){
+   landed=false;
   }else throw new Error('Invalid movement in this attempt.');
   if(landed)level.shards.forEach((s,i)=>{if(s.x===pos.x&&s.z===pos.z&&(s.mode===undefined||s.mode===mode))found.add(i);});
-  solved=pos.type==='E'&&found.size===level.shards.length;
+  solved=pos.type==='E'&&found.size===level.shards.length&&puzzle.seals.every(seal=>seal.unlocked);
  }
  if(!solved||elapsed<minimum||elapsed>21600000)throw new Error('Complete this chamber from its start to record a time.');
  return {falls};

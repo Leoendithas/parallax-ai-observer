@@ -1,9 +1,9 @@
 {
   "name": "parallax",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "private": true,
   "type": "module",
-  "description": "A twelve-chamber perspective puzzle game with rotating islands and shared per-chamber leaderboards.",
+  "description": "A twenty-chamber perspective puzzle game with rotating islands, sightline seals, and shared per-chamber leaderboards.",
   "engines": {
     "node": ">=22.9"
   },
