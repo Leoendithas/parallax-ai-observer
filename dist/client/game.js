@@ -138,7 +138,10 @@ function animateIsland(now){
 function formatTime(ms){const s=Math.floor(ms/1000);return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;}
 function resize(){
  const rect=$('stage').getBoundingClientRect(),w=rect.width,h=rect.height;renderer.setSize(w,h,false);
- const narrow=w<740, availableW=narrow?Math.min(w-40,560):Math.max(360,w-465),availableH=narrow?Math.max(180,h-(hasMechanics(LEVELS[levelIndex])?425:325)):h-190;
+ const narrow=matchMedia('(max-width:740px)').matches;
+ // On phones the canvas occupies its own grid row below the compact toolbar.
+ const captionHeight=document.querySelector('.stage-label').getBoundingClientRect().height;
+ const availableW=narrow?Math.max(1,w-16):Math.max(360,w-465),availableH=narrow?Math.max(1,h-captionHeight-24):h-190;
  const bounds={xMin:Infinity,xMax:-Infinity,yMin:Infinity,yMax:-Infinity};
  for(const a of [targetAngle])for(const t of tiles)for(const dx of [-.6,.6])for(const dz of [-.6,.6])for(const y of [-.8,t.type==='E'?1.8:.9]){
   const p=worldPos(t),x=p.x+dx,z=p.z+dz;
@@ -146,7 +149,7 @@ function resize(){
   bounds.xMin=Math.min(bounds.xMin,sx);bounds.xMax=Math.max(bounds.xMax,sx);bounds.yMin=Math.min(bounds.yMin,sy);bounds.yMax=Math.max(bounds.yMax,sy);
  }
  targetSpan=Math.max((bounds.xMax-bounds.xMin)/availableW*h,(bounds.yMax-bounds.yMin)/availableH*h)*1.04;viewWidth=w;viewHeight=h;
- const targetCenterY=narrow?((hasMechanics(LEVELS[levelIndex])?330:220)+h-125)/2:(65+h-140)/2;
+ const targetCenterY=narrow?(h-captionHeight-16)/2:(65+h-140)/2;
  camera.setViewOffset(w,h,0,h/2-targetCenterY,w,h);camera.updateProjectionMatrix();eyeCamera.aspect=w/h;eyeCamera.fov=narrow?86:72;eyeCamera.updateProjectionMatrix();travelCamera.aspect=w/h;travelCamera.updateProjectionMatrix();
 }
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();function pick(event){const r=canvas.getBoundingClientRect();pointer.set((event.clientX-r.left)/r.width*2-1,-(event.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(pointer,activeCamera);return raycaster.intersectObjects(tileMeshes.filter(t=>!mode||isSolid(t.t,mode)).map(t=>t.block),false)[0]?.object.userData.tile;}
@@ -180,6 +183,10 @@ let last=performance.now();function frame(now){race?.tick();requestAnimationFram
  if(now-lastMechanismUpdate>60){updateMechanicPanel();lastMechanismUpdate=now;}scene.fog.density=.009*Math.min(1,20/Math.max(20,activeCamera.position.length()));renderer.render(scene,activeCamera);}
 race=createLeaderboard({restart:()=>loadLevel(levelIndex),practice:()=>canvas.focus({preventScroll:true}),qa:qaSession});
 loadLevel(chamberFromHash());$('loading').remove();requestAnimationFrame(frame);race.welcome();
+// Chamber instructions, fonts, and browser chrome can change the play area size.
+const stageResizeObserver=new ResizeObserver(resize);
+stageResizeObserver.observe($('stage'));
+stageResizeObserver.observe(document.querySelector('.stage-label'));
 
 // Agent actions use the same movement, reality, and chamber state as the controls.
 function gameState(includeBoard=false){return {chamber:LEVELS[levelIndex].id,title:LEVELS[levelIndex].menu,reality:mode?'first_person':'overview',position:{x:position.x,z:position.z},checkpoint:{x:checkpoint.x,z:checkpoint.z},fragments:collected.size,totalFragments:LEVELS[levelIndex].shards.length,shifts,moves,falls,facing:mode?['north','east','south','west'][Math.round((((-fpYaw*180/Math.PI)%360)+360)%360/90)%4]:['north','west','south','east'][((Math.round((targetAngle-Math.PI/4)/(Math.PI/2))%4)+4)%4],completed,moving:!!motion||!!falling||!!rotationMotion,...mechanicState(),...(includeBoard?{map:puzzleMap(LEVELS[levelIndex],puzzle),legend:{'.':'void',A:'overview only',B:'first person only',O:'shared anchor',S:'start / shared',E:'exit / shared',G:'sealed blue bridge'},fragmentsRemaining:LEVELS[levelIndex].shards.filter((_,i)=>!collected.has(i)).map(s=>({...s,reality:s.mode===1?'first_person':'overview'}))}:{})};}
