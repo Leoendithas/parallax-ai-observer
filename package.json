@@ -9,6 +9,6 @@
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env.local preview.mjs",
-    "check": "node --check dist/client/game.js && node --check dist/client/observer.js && node --check dist/server/index.js"
+    "check": "node --check dist/client/game.js && node --check dist/client/audio.js && node --check dist/client/observer.js && node --check dist/server/index.js && node --check preview.mjs"
   }
 }

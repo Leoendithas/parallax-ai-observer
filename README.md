@@ -32,6 +32,12 @@ Open http://127.0.0.1:5174. Set `PORT` to use another local port. The game can r
 
 Keep `.env.local` out of Git. For Sites hosting, configure `OPENAI_API_KEY` as a server-side runtime secret and redeploy. No key is included in this repository or sent to the browser.
 
+## Soundscape
+
+An original 80-second ambient score starts with the first gameplay click or keypress, then loops continuously. First person softens the mix. The Sound menu has separate music/effects levels and a persistent mute preference. Audio fades out when the tab is hidden and resumes when you return.
+
+Footsteps use quiet filtered texture, perspective shifts use soft air and resonance, fragments ring with gentle glass notes, and completion resolves in a restrained chord. Effects are synthesized in the browser with smooth envelopes and reverb.
+
 ## Controls
 
 - **WASD / arrows:** move; in first person, left/right arrows turn.
@@ -47,6 +53,7 @@ Amber paths exist in overview. Blue paths exist in first person. White anchors e
 - `dist/client/game.js`: Three.js world, controls, collision rules, puzzle state, and validated adaptation actions.
 - `dist/client/levels.js`: six chambers and pathfinding.
 - `dist/client/observer.js`: automatic performance monitoring and adaptation requests.
+- `dist/client/audio.js`: music playback, perspective mixing, synthesized effects, and saved volume controls.
 - `dist/server/index.js`: Cloudflare Worker endpoint, Agents API request, and streamed final-answer parsing.
 - `preview.mjs`: local Node server for the same game and API handler.
 
@@ -62,4 +69,4 @@ During development, all six chambers were solved in browser testing. An addition
 
 ## Credits
 
-Built and iterated with Astra in Codex, including puzzle design, implementation, browser testing, and deployment. Three.js and RoundedBoxGeometry are included under their MIT license in `dist/client/vendor/LICENSE`. The panoramic starfield was generated for the game.
+Built and iterated with Astra in Codex, including puzzle design, implementation, browser testing, and deployment. Three.js and RoundedBoxGeometry are included under their MIT license in `dist/client/vendor/LICENSE`. The panoramic starfield was generated for the game. The original soundtrack is documented in `dist/client/assets/AUDIO.md`.
