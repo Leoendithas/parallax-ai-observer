@@ -2,9 +2,49 @@
 
 A spatial puzzle game where changing your viewpoint changes which paths physically exist. Switch between a rotatable 3D overview and first person, gather light fragments, and find the exit across six authored chambers.
 
-[Play the AI Observer edition](https://parallax-ai-observer.lancetyw.chatgpt.site/) · [Original game](https://parallax-observers-path.lancetyw.chatgpt.site/)
+[AI Observer demo](https://parallax-ai-observer.lancetyw.chatgpt.site/) · [Play the public standalone game](https://parallax-observers-path.lancetyw.chatgpt.site/)
 
-The hosted demos currently use owner-only ChatGPT access. This public repository can be run locally with your own OpenAI API key.
+The standalone game is public and needs no AI or API key. The hosted AI Observer demo has restricted access. This repository contains the AI Observer edition; it can be run locally, with your own OpenAI API key for automatic adaptation.
+
+## Latest developments
+
+Development continues in two editions. **AI Observer**, in this repository, has six authored chambers, automatic difficulty adaptation, and the original ambient score with saved music and effects settings. The separate **standalone edition** carries the new puzzle mechanics and campaign expansion.
+
+### Available in the public standalone game
+
+The six original perspective chambers are joined by three playable prototypes:
+
+- [Chamber 7 — Sightline seals](https://parallax-observers-path.lancetyw.chatgpt.site/#chamber-7): align a split ring from a marked white viewpoint in first person, then bind it to open a blue bridge that stays available until the chamber restarts.
+- [Chamber 13 — Rotating islands](https://parallax-observers-path.lancetyw.chatgpt.site/#chamber-13): turn an amber arm clockwise from its fixed white hub in overview to reach another landing.
+- [Chamber 19 — Combined mechanics](https://parallax-observers-path.lancetyw.chatgpt.site/#chamber-19): use perspective switching, a sightline seal, and island rotation in a return journey.
+
+The standalone edition also includes the ambient score, subtle effects, separate volume controls, and saved sound preferences.
+
+### Next release: rotating islands first
+
+The next campaign order moves rotating islands ahead of sightline seals:
+
+| Chambers | Chapter | Development status |
+| --- | --- | --- |
+| 1–6 | Perspective switching | Original six chambers retained |
+| 7–12 | Rotating islands | All six implemented; unreleased |
+| 13–18 | Sightline seals | Prototype moved to 13; 14–18 planned |
+| 19–20 | Combined mastery | Prototype 19 retained; 20 planned |
+
+The six island chambers introduce these ideas in sequence:
+
+| Chamber | Name | Puzzle focus |
+| --- | --- | --- |
+| 7 | A world that turns | One arm, one turn, and a new landing |
+| 8 | Back to the center | Return to the hub to choose another destination |
+| 9 | Two ends. One turn | Opposite arms rotate together |
+| 10 | A second turn | Operate two independent islands |
+| 11 | Leave a way back | Restore the route through an earlier island |
+| 12 | The roads between | Link two-ended islands through a blue gallery and return home |
+
+This work is saved on `codex/rotating-islands-7-12` in the standalone game's **Sites source repository**. That branch is not part of this GitHub repository and has not been merged into the standalone game's `main` or published. The public links above still use the earlier prototype numbering.
+
+The unreleased chapter preserves completed-room progress when rooms are renumbered. Its 14 regression tests pass, covering puzzle rules, seal geometry, saved-progress migration, and solvability. Exhaustive island checks confirm that reachable states remain recoverable, clockwise turns are safe, and each island must be used to complete its chamber.
 
 ## Automatic difficulty adaptation
 
