@@ -5,7 +5,7 @@ import {analyze} from './helpers/analyze-chamber.mjs';
 
 export {analyze} from './helpers/analyze-chamber.mjs';
 
-for(const level of LEVELS.filter(level=>level.id>=7))test(`mechanism chamber ${level.id} is solvable and recoverable, and needs every mechanism`,()=>{
+for(const level of LEVELS.filter(level=>level.id>=7&&level.id<=20))test(`mechanism chamber ${level.id} is solvable and recoverable, and needs every mechanism`,()=>{
  const withFalls=analyze(level),noFalls=analyze(level,{allowFalls:false});
  assert.ok(withFalls.solvable,`Chamber ${level.id} must be solvable`);
  assert.equal(withFalls.stuck,0,`Chamber ${level.id} has an unrecoverable state: ${JSON.stringify(withFalls.stuckExample)}`);

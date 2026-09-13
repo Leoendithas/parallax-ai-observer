@@ -73,3 +73,10 @@
  .mechanic-action-row{grid-column:2;grid-row:1 / 3}.mechanic-action-row button{min-height:44px;padding:8px 10px;font-size:13px}
  #look-controls{grid-column:1 / -1;justify-content:center;margin:0}#look-controls button{width:44px;height:44px}
 }
+
+/* Echoes and impossible crossings stay in the quiet, persistent mechanism panel. */
+.mechanic-panel .echo-status{color:#c4b4eb;font-size:12px;border-left:2px solid #ae9cda;padding-left:9px;margin:12px 0 0}
+#bridge-look-controls{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12px;color:#b3bed2}
+#bridge-look-controls button{min-width:40px;min-height:40px;background:#25313a;border:1px solid #ffffff20;border-radius:6px;font-size:23px}
+.progress-dots{flex-wrap:wrap;max-width:280px;gap:7px}.progress-dots i{flex-shrink:0}
+@media(max-width:740px){.journey-button{gap:10px;max-width:100%}.progress-dots{max-width:210px;gap:5px}.progress-dots i{width:5px;height:5px}.mechanic-panel .echo-status{grid-column:1 / -1;grid-row:auto;font-size:11px;margin:3px 0 0;line-height:1.35}.mechanic-panel #bridge-look-controls{grid-column:1 / -1;justify-content:center;margin:0;gap:12px}#bridge-look-controls button{width:44px;height:44px}}

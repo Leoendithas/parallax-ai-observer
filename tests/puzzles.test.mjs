@@ -4,8 +4,8 @@ import {LEVELS,isSolid} from '../dist/client/levels.js';
 import {bindSeal,createPuzzle,puzzleMap,sealAlignment} from '../dist/client/puzzles.js';
 import {solveChamber} from './helpers/solve-chamber.mjs';
 
-test('public campaign contains twenty released chambers',()=>{
-  assert.deepEqual(LEVELS.map(l=>l.id),Array.from({length:20},(_,i)=>i+1));
+test('public campaign contains thirty-five released chambers',()=>{
+  assert.deepEqual(LEVELS.map(l=>l.id),Array.from({length:35},(_,i)=>i+1));
   for(const level of LEVELS){
     assert.ok(!level.prototype);
     assert.ok(level.map.every(row=>row.length===level.map[0].length));

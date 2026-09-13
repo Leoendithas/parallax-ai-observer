@@ -1,3 +1,6 @@
+import {EXPANSION_LEVELS} from './expansion-levels.js';
+export {ECHO_CHAPTER_IDS,PERSPECTIVE_CHAPTER_IDS,EXPANSION_MASTERY_IDS} from './expansion-levels.js';
+
 export const LEVELS = [
  {name:'A different <br>light.',menu:'A different light',description:'See the world from above. <br>Then step inside it.',map:['.......','....BBE','....O..','..AAO..','..O....','SAA....','.......'],shards:[{x:4,z:1,mode:1}],hint:'Follow the amber path to the white stone. Enter first person, then walk the blue path to the arch.'},
  {name:'A little <br>detour.',menu:'A little detour',description:'Not every path leads forward. <br>Some lead to what you need.',map:['.......','..A....','..A....','SAOBOAE','....B..','....B..','.......'],shards:[{x:2,z:1,mode:0},{x:4,z:5,mode:1}],hint:'Explore each branch, then return to its white anchor. The first fragment is above the amber path; the second is below the blue path.'},
@@ -183,6 +186,7 @@ LEVELS.push(
   completion:'Twenty chambers complete. You found the light, changed the world around it, and made your way home.'
  }
 );
+LEVELS.push(...EXPANSION_LEVELS);
 LEVELS.sort((a,b)=>a.id-b.id);
 
 export function parseLevel(level){const tiles=[];level.map.forEach((row,z)=>[...row].forEach((type,x)=>{if(type!=='.')tiles.push({x,z,type,mask:type==='A'?1:type==='B'?2:3});}));return tiles;}

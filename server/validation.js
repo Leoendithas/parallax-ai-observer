@@ -1,5 +1,5 @@
 import {LEVELS,isSolid} from '../dist/client/levels.js';
-import {createPuzzle,turnIsland,bindSeal} from '../dist/client/puzzles.js';
+import {createPuzzle,turnIsland,bindSeal,shiftEcho,crossPerspectiveBridge,canWalkBetween} from '../dist/client/puzzles.js';
 // Keep existing chamber records when adding new chapters.
 export const VERSION='six-chambers-v1';
 export function validateName(value){
@@ -18,11 +18,15 @@ export function validateReplay(chamber,events,elapsed){
   if(solved||!Array.isArray(e))throw new Error('Invalid attempt sequence.');
   if(e[0]==='w'&&e.length===3&&Number.isInteger(e[1])&&Number.isInteger(e[2])&&Math.abs(e[1]-pos.x)+Math.abs(e[2]-pos.z)===1){
    minimum+=150;const tile=at(e[1],e[2]);
-   if(!isSolid(tile,mode)){pos=checkpoint;falls++;landed=false;}else{pos=tile;if(tile.mask===3)checkpoint=tile;}
+   if(!canWalkBetween(pos,tile,mode)){pos=checkpoint;falls++;landed=false;}else{pos=tile;if(tile.mask===3)checkpoint=tile;}
   }else if(e[0]==='s'&&e.length===2&&(e[1]===0||e[1]===1)&&e[1]!==mode){
-   mode=e[1];minimum+=50;if(!isSolid(pos,mode)){pos=checkpoint;falls++;landed=false;}
+   shiftEcho(puzzle,pos,mode,e[1]);mode=e[1];minimum+=50;if(!isSolid(pos,mode)){pos=checkpoint;falls++;landed=false;}
+  }else if(e[0]==='p'&&e.length===3&&typeof e[1]==='string'&&Number.isFinite(e[2])){
+   const target=crossPerspectiveBridge(puzzle,e[1],pos,mode,e[2]);
+   if(!target)throw new Error('Invalid movement in this attempt.');
+   pos=at(target.x,target.z);checkpoint=pos;minimum+=230;
   }else if(e[0]==='t'&&e.length===2&&typeof e[1]==='string'&&turnIsland(puzzle,e[1],pos,mode).ok){
-   // Reduced motion turns instantly; only walks and shifts add a timing minimum.
+   // Reduced motion turns instantly, so island turns have no timing minimum.
    landed=false;
   }else if(e[0]==='b'&&e.length===4&&typeof e[1]==='string'&&Number.isFinite(e[2])&&Number.isFinite(e[3])&&e[3]>=-1.4&&e[3]<=.52&&bindSeal(puzzle,e[1],pos,mode,e[2],e[3])){
    landed=false;

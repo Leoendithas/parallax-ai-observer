@@ -1,16 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {LEVELS,isSolid} from '../dist/client/levels.js';
-import {bindSeal,createPuzzle,turnIsland} from '../dist/client/puzzles.js';
+import {LEVELS} from '../dist/client/levels.js';
+import {bindSeal,canWalkBetween,createPuzzle,crossPerspectiveBridge,shiftEcho,turnIsland} from '../dist/client/puzzles.js';
 import {solveChamber} from './helpers/solve-chamber.mjs';
 import {VERSION,validateReplay,validateName} from '../server/validation.js';
 import worker from '../server/index.js';
 import {localDatabase} from '../server/local-db.mjs';
 const eventsFor=level=>{
  const route=solveChamber(level);assert.ok(route,`Chamber ${level.id} needs a complete route`);
- return route.map(s=>s.type==='walk'?['w',s.x,s.z]:s.type==='turn'?['t',s.islandId]:s.type==='bind'?['b',s.sealId,s.yaw,s.pitch]:['s',s.mode]);
+ return route.map(s=>s.type==='walk'?['w',s.x,s.z]:s.type==='turn'?['t',s.islandId]:s.type==='bind'?['b',s.sealId,s.yaw,s.pitch]:s.type==='bridge'?['p',s.bridgeId,s.angle]:['s',s.mode]);
 };
-const minimumTime=events=>events.reduce((time,event)=>time+(event[0]==='w'?150:event[0]==='s'?50:0),0);
+const minimumTime=events=>events.reduce((time,event)=>time+(event[0]==='w'?150:event[0]==='s'?50:event[0]==='p'?230:0),0);
 for(const level of LEVELS)test(`server validates the complete route for chamber ${level.id}`,()=>{
  const events=eventsFor(level);assert.equal(validateReplay(level.id,events,60000).falls,0);
  assert.throws(()=>validateReplay(level.id,events.slice(0,-1),60000));
@@ -24,12 +24,16 @@ for(const level of LEVELS)test(`server validates the complete route for chamber 
   assert.ok(events.some(event=>event[0]==='b'&&event[1]===seal.id),`Chamber ${level.id} needs seal ${seal.id}`);
   assert.throws(()=>validateReplay(level.id,events.filter(event=>event[0]!=='b'||event[1]!==seal.id),60000));
  }
+ for(const bridge of level.perspectiveBridges||[]){
+  assert.ok(events.some(event=>event[0]==='p'&&event[1]===bridge.id),`Chamber ${level.id} needs bridge ${bridge.id}`);
+  assert.throws(()=>validateReplay(level.id,events.filter(event=>event[0]!=='p'||event[1]!==bridge.id),60000));
+ }
 });
 test('nicknames and impossible paths are rejected',()=>{
  assert.equal(validateName('  Moon walker  '),'Moon walker');
  for(const name of ['x','<script>','a\u200bb',null,'a'.repeat(25)])assert.throws(()=>validateName(name));
  assert.throws(()=>validateReplay(1,[['w',6,1]],10000));
- for(const id of [0,21,99,1.5])assert.throws(()=>validateReplay(id,[['s',1]],10000));
+ for(const id of [0,36,99,1.5])assert.throws(()=>validateReplay(id,[['s',1]],10000));
 });
 test('turn replays require the correct white hub, overview, and one clockwise turn',()=>{
  const level=LEVELS.find(level=>level.id===7),events=eventsFor(level),turn=events.findIndex(event=>event[0]==='t');
@@ -62,9 +66,10 @@ test('seal replays require a known seal, its anchor, first person, and finite al
  assert.throws(()=>validateReplay(level.id,[...prefix,event,event,...suffix],60000),/Invalid movement/);
  assert.throws(()=>validateReplay(1,[event,...eventsFor(LEVELS[0])],60000),/Invalid movement/);
 });
-for(const level of LEVELS.filter(level=>level.id>=13))test(`chamber ${level.id} keeps seal bindings after a fall to the anchor`,()=>{
+for(const level of LEVELS.filter(level=>level.seals?.length))test(`chamber ${level.id} keeps seal bindings after a fall to the anchor`,()=>{
  const events=eventsFor(level),puzzle=createPuzzle(level),index=events.findIndex(event=>event[0]==='b');
  assert.ok(index>=0);
+ let position=puzzle.tiles.find(tile=>tile.type==='S'),mode=0;
  for(const event of events.slice(0,index+1)){
   if(event[0]==='t'){
    const island=puzzle.islands.find(island=>island.id===event[1]);
@@ -72,10 +77,18 @@ for(const level of LEVELS.filter(level=>level.id>=13))test(`chamber ${level.id} 
   }else if(event[0]==='b'){
    const seal=puzzle.seals.find(seal=>seal.id===event[1]);
    assert.ok(bindSeal(puzzle,seal.id,seal.anchor,1,event[2],event[3]));
+  }else if(event[0]==='s'){
+   shiftEcho(puzzle,position,mode,event[1]);mode=event[1];
+  }else if(event[0]==='w'){
+   position=puzzle.tiles.find(tile=>tile.x===event[1]&&tile.z===event[2]);
+  }else if(event[0]==='p'){
+   position=crossPerspectiveBridge(puzzle,event[1],position,mode,event[2]);
+   assert.ok(position);
   }
  }
  const anchor=puzzle.seals.find(seal=>seal.id===events[index][1]).anchor;
- const gap=[[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dz])=>({x:anchor.x+dx,z:anchor.z+dz})).find(p=>!isSolid(puzzle.tiles.find(t=>t.x===p.x&&t.z===p.z),1));
+ const anchorTile=puzzle.tiles.find(tile=>tile.x===anchor.x&&tile.z===anchor.z);
+ const gap=[[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dz])=>({x:anchor.x+dx,z:anchor.z+dz})).find(p=>!canWalkBetween(anchorTile,puzzle.tiles.find(t=>t.x===p.x&&t.z===p.z),1));
  assert.ok(gap,'A seal anchor needs an adjacent fall for this checkpoint check');
  const withFall=[...events.slice(0,index+1),['w',gap.x,gap.z],...events.slice(index+1)];
  assert.equal(validateReplay(level.id,withFall,minimumTime(withFall)).falls,1);
@@ -114,7 +127,7 @@ test('shared API separates chambers, saves best attempts, and retries idempotent
    assert.deepEqual(islandBoard.data.entries,[{name:'Islandwalker',elapsedMs:30000,falls:0}]);
   }
   assert.equal((await call('/api/leaderboard?chamber=1')).data.entries[0].elapsedMs,9000);
-  for(const chamber of [0,21,99,1.5]){
+  for(const chamber of [0,36,99,1.5]){
    assert.equal((await call(`/api/leaderboard?chamber=${chamber}`)).status,400);
    assert.equal((await call('/api/runs',{name:'Moonwalker',chamber,player})).status,400);
   }

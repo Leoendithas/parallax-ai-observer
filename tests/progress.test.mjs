@@ -19,7 +19,17 @@ test('prototype completions follow their rooms when reordered and new rooms stay
  assert.equal(new Set(keys).size,LEVELS.length);
  assert.equal(LEVELS.find(l=>l.id===13).progressKey,'seal-intro');
  assert.equal(LEVELS.find(l=>l.id===19).progressKey,'combined-prototype');
- assert.deepEqual(LEVELS.filter(l=>l.id>=13&&!migrated.includes(l.progressKey)).map(l=>l.id),[14,15,16,17,18,20]);
+ assert.deepEqual(LEVELS.filter(l=>l.id>=13&&!migrated.includes(l.progressKey)).map(l=>l.id),[14,15,16,17,18,20,...Array.from({length:15},(_,i)=>i+21)]);
+});
+test('the twenty-chamber save preserves all completions without awarding expansion rooms',()=>{
+ const originalKeys=LEVELS.filter(level=>level.id<=20).map(level=>level.progressKey);
+ const saved=storage({[PROGRESS_KEY]:JSON.stringify(originalKeys)});
+ const completed=loadProgress(saved,keys);
+ assert.deepEqual(completed,originalKeys);
+ assert.equal(LEVELS.filter(level=>level.id>20&&completed.includes(level.progressKey)).length,0);
+ const expansionKey=LEVELS.find(level=>level.id===21).progressKey;
+ saveProgress(saved,[...completed,expansionKey]);
+ assert.deepEqual(loadProgress(saved,keys),[...originalKeys,expansionKey]);
 });
 test('invalid, unknown and unavailable saves do not prevent play',()=>{
  for(const value of ['no json','null','{}','[null,-1,500,"7"]'])assert.deepEqual(loadProgress(storage({'parallax-finished':value}),keys),[]);
