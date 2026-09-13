@@ -1,3 +1,4 @@
+import {LEVELS} from './levels.js';
 const API=location.hostname==='127.0.0.1'||location.hostname==='localhost'?'':'https://parallax-observers-path.lancetyw.chatgpt.site';
 const $=id=>document.getElementById(id);
 export const formatRaceTime=ms=>`${Math.floor(ms/60000)}:${String(Math.floor(ms/1000)%60).padStart(2,'0')}.${String(Math.floor(ms%1000/10)).padStart(2,'0')}`;
@@ -8,6 +9,7 @@ async function request(path,data){
 function read(key,fallback){try{return localStorage.getItem(key)||fallback;}catch{return fallback;}}
 function write(key,value){try{localStorage.setItem(key,value);}catch{}}
 export function createLeaderboard({restart,practice,qa=false}){
+ $('board-chamber').replaceChildren(...LEVELS.map(level=>{const option=document.createElement('option');option.value=String(level.id);option.textContent=`Chamber ${String(level.id).padStart(2,'0')} · ${level.menu}`;return option;}));
  let ranked=false,wantTimed=false,nextTimed=false,preparing=false,run=null,chamber=1,generation=0,loadGeneration=0;
  let player=read('parallax-player','');if(!/^[a-f0-9]{64}$/.test(player)){player=Array.from(crypto.getRandomValues(new Uint8Array(32)),n=>n.toString(16).padStart(2,'0')).join('');write('parallax-player',player);}
  let pending=[];try{const saved=JSON.parse(read('parallax-pending-score','[]'));if(Array.isArray(saved))pending=saved;}catch{}

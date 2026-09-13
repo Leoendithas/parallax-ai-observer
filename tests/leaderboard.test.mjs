@@ -2,25 +2,58 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {LEVELS} from '../dist/client/levels.js';
 import {solveChamber} from './helpers/solve-chamber.mjs';
-import {validateReplay,validateName} from '../server/validation.js';
+import {VERSION,validateReplay,validateName} from '../server/validation.js';
 import worker from '../server/index.js';
 import {localDatabase} from '../server/local-db.mjs';
-const eventsFor=level=>solveChamber(level).map(s=>s.type==='walk'?['w',s.x,s.z]:['s',s.mode]);
+const eventsFor=level=>{
+ const route=solveChamber(level);assert.ok(route,`Chamber ${level.id} needs a complete route`);
+ return route.map(s=>s.type==='walk'?['w',s.x,s.z]:s.type==='turn'?['t',s.islandId]:['s',s.mode]);
+};
+const minimumTime=events=>events.reduce((time,event)=>time+(event[0]==='w'?150:event[0]==='s'?50:0),0);
 for(const level of LEVELS)test(`server validates the complete route for chamber ${level.id}`,()=>{
  const events=eventsFor(level);assert.equal(validateReplay(level.id,events,60000).falls,0);
  assert.throws(()=>validateReplay(level.id,events.slice(0,-1),60000));
- assert.throws(()=>validateReplay(level.id,events,1));
+ assert.equal(validateReplay(level.id,events,minimumTime(events)).falls,0);
+ assert.throws(()=>validateReplay(level.id,events,minimumTime(events)-1));
+ for(const island of level.islands||[]){
+  assert.ok(events.some(event=>event[0]==='t'&&event[1]===island.id),`Chamber ${level.id} needs island ${island.id}`);
+  assert.throws(()=>validateReplay(level.id,events.filter(event=>event[0]!=='t'||event[1]!==island.id),60000));
+ }
 });
 test('nicknames and impossible paths are rejected',()=>{
  assert.equal(validateName('  Moon walker  '),'Moon walker');
  for(const name of ['x','<script>','a\u200bb',null,'a'.repeat(25)])assert.throws(()=>validateName(name));
  assert.throws(()=>validateReplay(1,[['w',6,1]],10000));
+ for(const id of [13,19])assert.throws(()=>validateReplay(id,[['s',1]],10000));
+});
+test('turn replays require the correct white hub, overview, and one clockwise turn',()=>{
+ const level=LEVELS.find(level=>level.id===7),events=eventsFor(level),turn=events.findIndex(event=>event[0]==='t');
+ for(const invalid of [['t','missing'],['t',null],['t','turntable',-1],['t','turntable',1]]){
+  assert.throws(()=>validateReplay(level.id,[...events.slice(0,turn),invalid,...events.slice(turn+1)],60000),/Invalid movement/);
+ }
+ assert.throws(()=>validateReplay(level.id,[events[turn],...events],60000),/Invalid movement/);
+ assert.throws(()=>validateReplay(level.id,[...events.slice(0,turn),['s',1],...events.slice(turn)],60000),/Invalid movement/);
+ assert.throws(()=>validateReplay(1,[['t','turntable'],...eventsFor(LEVELS[0])],60000),/Invalid movement/);
+});
+test('turning moves the arm away and a fall returns to its fixed hub',()=>{
+ const level=LEVELS.find(level=>level.id===7),events=eventsFor(level),turn=events.findIndex(event=>event[0]==='t');
+ // After west turns north, the former west arm is empty and the hub is still the checkpoint.
+ const withFall=[...events.slice(0,turn+1),['w',3,4],...events.slice(turn+1)];
+ assert.equal(validateReplay(level.id,withFall,minimumTime(withFall)).falls,1);
+});
+test('separate islands keep independent orientations and require their own hubs',()=>{
+ const level=LEVELS.find(level=>level.id===11),events=eventsFor(level),far=events.findIndex(event=>event[0]==='t'&&event[1]==='far');
+ assert.ok(far>=0);assert.ok(events.some(event=>event[0]==='t'&&event[1]==='home'));
+ // This route returns over the home island after turning the far island several times.
+ assert.equal(validateReplay(level.id,events,minimumTime(events)).falls,0);
+ assert.throws(()=>validateReplay(level.id,[...events.slice(0,far),['t','home'],...events.slice(far+1)],60000),/Invalid movement/);
 });
 test('shared API separates chambers, saves best attempts, and retries idempotently',async()=>{
  const DB=await localDatabase(':memory:'),env={DB};let now=1700000000000;const originalNow=Date.now;Date.now=()=>now;
  const call=async(path,data)=>{const response=await worker.fetch(new Request('https://game.example'+path,{method:data?'POST':'GET',headers:data?{'Content-Type':'application/json'}:{},body:data?JSON.stringify(data):undefined}),env);return {status:response.status,data:await response.json(),headers:response.headers};};
  const player='a'.repeat(64);
  try{
+  assert.equal(VERSION,'six-chambers-v1','Adding chambers must preserve original leaderboard records');
   const start=await call('/api/runs',{name:'Moonwalker',chamber:1,player});assert.equal(start.status,201);
   now+=30000;
   assert.equal((await call('/api/runs/finish',{token:start.data.token,events:[['w',6,1]],durationMs:10000})).status,400);
@@ -32,7 +65,20 @@ test('shared API separates chambers, saves best attempts, and retries idempotent
   const board=await call('/api/leaderboard?chamber=1');assert.equal(board.data.entries.length,1);assert.equal(board.data.entries[0].elapsedMs,9000);
   assert.deepEqual(Object.keys(board.data.entries[0]).sort(),['elapsedMs','falls','name']);
   assert.equal((await call('/api/leaderboard?chamber=2')).data.entries.length,0);
-  assert.equal((await call('/api/leaderboard?chamber=7')).status,400);
+  for(const chamber of [7,8,9,10,11,12]){
+   const empty=await call(`/api/leaderboard?chamber=${chamber}`);assert.equal(empty.status,200);assert.equal(empty.data.entries.length,0);
+   const attempt=await call('/api/runs',{name:'Islandwalker',chamber,player});assert.equal(attempt.status,201);
+   now+=60000;
+   const completed=await call('/api/runs/finish',{token:attempt.data.token,events:eventsFor(LEVELS.find(level=>level.id===chamber)),durationMs:30000});
+   assert.equal(completed.status,200);assert.equal(completed.data.falls,0);assert.equal(completed.data.saved,true);
+   const islandBoard=await call(`/api/leaderboard?chamber=${chamber}`);assert.equal(islandBoard.status,200);
+   assert.deepEqual(islandBoard.data.entries,[{name:'Islandwalker',elapsedMs:30000,falls:0}]);
+  }
+  assert.equal((await call('/api/leaderboard?chamber=1')).data.entries[0].elapsedMs,9000);
+  for(const chamber of [0,13,19,1.5]){
+   assert.equal((await call(`/api/leaderboard?chamber=${chamber}`)).status,400);
+   assert.equal((await call('/api/runs',{name:'Moonwalker',chamber,player})).status,400);
+  }
   assert.equal(board.headers.get('Access-Control-Allow-Origin'),'*');
  }finally{Date.now=originalNow;DB.close();}
 });

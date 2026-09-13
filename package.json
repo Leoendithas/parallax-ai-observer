@@ -3,13 +3,13 @@
   "version": "1.4.0",
   "private": true,
   "type": "module",
-  "description": "A six-chamber perspective puzzle game with shared per-chamber leaderboards.",
+  "description": "A twelve-chamber perspective puzzle game with rotating islands and shared per-chamber leaderboards.",
   "engines": {
     "node": ">=22.9"
   },
   "scripts": {
     "start": "node preview.mjs",
-    "check": "node --check dist/client/game.js && node --check dist/client/audio.js && node --check dist/client/levels.js && node --check dist/client/puzzles.js && node --check dist/client/mechanisms.js && node --check preview.mjs && node --check server/index.js && node --check dist/client/leaderboard.js",
+    "check": "node --check dist/client/game.js && node --check dist/client/audio.js && node --check dist/client/levels.js && node --check dist/client/puzzles.js && node --check dist/client/mechanisms.js && node --check dist/client/progress.js && node --check preview.mjs && node --check server/index.js && node --check server/validation.js && node --check dist/client/leaderboard.js",
     "test": "node --test tests/*.test.mjs",
     "build": "node build.mjs"
   },
