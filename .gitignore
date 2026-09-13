@@ -1,5 +1,7 @@
-.env*
-!.env.example
+.DS_Store
 .sites-runtime/
 node_modules/
-.DS_Store
+/submission/
+.env*
+!.env.example
+.vercel/

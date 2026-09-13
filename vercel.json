@@ -1,9 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "outputDirectory": "dist/client",
-  "functions": {
-    "api/observer.js": {
-      "maxDuration": 60
-    }
-  }
+  "outputDirectory": "dist"
 }

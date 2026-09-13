@@ -1,56 +1,37 @@
 # Parallax
 
-A perspective puzzle game where changing your viewpoint changes which paths exist. Gather the light fragments and find your way to the white arch.
+A six-chamber browser puzzle game. Switch between an overhead view and first person to change which paths are solid. Amber paths belong to the overhead view, blue paths belong to first person, and white stone exists in both.
 
-[Play the game](https://parallax-observers-path.lancetyw.chatgpt.site/)
+[Play the public demo](https://parallax-observers-path.lancetyw.chatgpt.site/)
 
-## How to play
+## Play
 
-- **Amber paths** are solid in the overview.
-- **Blue paths** are solid in first person.
-- **White stone** stays solid in both views and is a safe place to switch.
-
-Falls return you to the last white platform, keeping the fragments you collected. Use **The Journey** to choose a chamber.
-
-## Levels
-
-The public game has six original chambers and three playable prototypes: **7 — Sightline seals**, **13 — Rotating islands**, and **19 — Combined mechanics**.
-
-The next release changes the chapter order:
-
-| Chambers | Chapter | Status |
-| --- | --- | --- |
-| 1–6 | Perspective switching | Original chambers |
-| 7–12 | Rotating islands | All six built; unreleased |
-| 13–18 | Sightline seals | Prototype at 13; 14–18 planned |
-| 19–20 | Combined mechanics | Prototype at 19; 20 planned |
-
-The island chapter progresses from a single rotating arm to two-ended islands, connected hubs, and return journeys. It is saved on `codex/rotating-islands-7-12` in the separate Sites source repository. It has not been released or added to this GitHub checkout, which contains the original six chambers.
-
-## Controls
-
-- **WASD / arrows:** move; in first person, left/right arrows turn.
-- **Space / 1 / 2:** switch perspective.
-- **Drag / Q / E:** rotate the map or look around.
-- **Click or tap a connected tile:** walk there.
+- **WASD / arrows:** walk; left and right arrows turn in first person.
+- **Drag / swipe, Q / E:** rotate the map or look around.
+- **Space:** switch perspective. **1 / 2:** choose a perspective.
+- **Click a connected solid tile:** walk to it.
 - **R:** restart the chamber.
+- Collect every light fragment, then reach the white arch.
 
-In the public prototypes, **F** binds an aligned sightline seal or turns an island from its white hub. The on-screen action button does the same.
-
-## Sound
-
-An original ambient score and subtle effects accompany the game. The Sound menu has separate music and effects volumes and remembers your preferences.
+Falls return you to the last white platform. Completed chambers and sound preferences are saved on your device. Music begins after your first interaction; the Sound menu controls music and effects separately. Guidance is available when you choose to open it.
 
 ## Run locally
 
-Requires Node.js 22.9 or newer. No dependency installation is needed.
+Use Node.js 22.9 or newer. Run `npm start`, then open http://127.0.0.1:5174. Set `PORT` to use another port. No installation or build step is needed.
 
-```sh
-npm start
-```
+Run `npm run check` and `npm test` to check the source and released chambers.
 
-Open http://127.0.0.1:5174. Set `PORT` to use another local port.
+## Hosting
+
+The game runs entirely in the browser. GitHub `main` contains the same six-chamber game as the public demo. Static files live in `dist/`; `vercel.json` points Vercel at that directory. No server functions or environment variables are required. Sites hosting uses the same static files.
+
+## Development branches
+
+- `codex/three-prototype-demo` preserves the earlier three-level mechanic demo.
+- `codex/rotating-islands-7-12` contains the unreleased island chapter in the Sites source repository.
+
+These development levels are excluded from the public demo and GitHub `main`.
 
 ## Credits
 
-Three.js and RoundedBoxGeometry are included under their [MIT license](dist/client/vendor/LICENSE). The original soundtrack is documented in [AUDIO.md](dist/client/assets/AUDIO.md).
+Three.js and RoundedBoxGeometry are distributed under the MIT license; see `dist/vendor/LICENSE`. The original soundtrack is documented in `dist/assets/AUDIO.md`. Sound effects are synthesized in the browser.
