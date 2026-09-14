@@ -14,3 +14,26 @@ export function loadProgress(storage,validKeys){
 export function saveProgress(storage,keys){
  try{storage.setItem(PROGRESS_KEY,JSON.stringify([...new Set(keys)]));}catch{}
 }
+
+export const LAST_CHAMBER_KEY='parallax-last-chamber';
+
+// The chamber in play lived only in the URL fragment, which a bookmark, a history
+// entry, or the brand link drops. Keep it beside the cleared set so returning
+// reopens the room the player left instead of the first one.
+export function loadLastChamber(storage,validKeys){
+ try{const key=storage.getItem(LAST_CHAMBER_KEY);return validKeys.includes(key)?key:null;}catch{return null;}
+}
+
+export function saveLastChamber(storage,key){
+ try{storage.setItem(LAST_CHAMBER_KEY,key);}catch{}
+}
+
+// Leaving on the completion screen saves a room that is already solved. Step
+// forward to the first unfinished chamber so a return never replays a finished
+// puzzle, and never sends anyone backwards.
+export function resolveStartChamber(orderedKeys,savedKey,completedKeys){
+ const saved=orderedKeys.indexOf(savedKey);
+ if(saved<0)return 0;
+ const unfinished=orderedKeys.findIndex((key,index)=>index>=saved&&!completedKeys.includes(key));
+ return unfinished<0?saved:unfinished;
+}
